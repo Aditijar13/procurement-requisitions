@@ -35,7 +35,9 @@ exports.register = async (req, res) => {
       email: user.email,
       role: user.role,
       department: user.department,
-      approval_limit: user.approval_limit,
+      approval_limit: user.approval_limit
+        ? parseFloat(user.approval_limit.toString())
+        : null,
     },
   });
 };
@@ -60,7 +62,9 @@ exports.login = async (req, res) => {
       email: user.email,
       role: user.role,
       department: user.department,
-      approval_limit: user.approval_limit,
+      approval_limit: user.approval_limit
+        ? parseFloat(user.approval_limit.toString())
+        : null,
     },
   });
 };
