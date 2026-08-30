@@ -51,7 +51,7 @@ exports.createRequisition = async (req, res) => {
 exports.getRequisitions = async (req, res) => {
   const { search, status, department, overdue, sort, page = 1, limit = 10, owner, assigned } = req.query;
 
-  let query = { is_archived: false };
+  let query = { is_archived: req.query.archived === "true" ? true : false };
 
   if (req.user.role === "requester") {
     query.requester = req.user._id;
