@@ -29,7 +29,7 @@ exports.submitRequisition = async (req, res) => {
     requisition: requisition._id,
     actor: req.user._id,
     action: "submitted",
-    snapshot: { status: "submitted", total: requisition.total },
+    snapshot: { old_status: "draft", new_status: "submitted", total: requisition.total },
   });
 
   res.status(200).json({ message: "Requisition submitted successfully" });
@@ -60,8 +60,39 @@ exports.approveRequisition = async (req, res) => {
   const total = parseFloat(requisition.total.toString());
 
   if (total > limit) {
+    // Find a higher approver and assign them automatically
+    const higherApprover = await User.findOne({
+      role: "approver",
+      _id: { $ne: req.user._id },
+      approval_limit: { $gte: total },
+    }).sort({ approval_limit: 1 });
+
+    if (higherApprover) {
+      const alreadyAssigned = requisition.assigned_approvers.some(
+        (id) => id.toString() === higherApprover._id.toString()
+      );
+
+      if (!alreadyAssigned) {
+        await Requisition.findByIdAndUpdate(req.params.id, {
+          $push: { assigned_approvers: higherApprover._id },
+        });
+      }
+
+      await logHistory({
+        requisition: requisition._id,
+        actor: req.user._id,
+        action: "comment",
+        comment: `Total ₹${total} exceeds approval limit ₹${limit}. Escalated to ${higherApprover.name}.`,
+        snapshot: { old_status: "submitted", new_status: "submitted" },
+      });
+
+      return res.status(403).json({
+        message: `Total ₹${total} exceeds your limit ₹${limit}. Escalated to ${higherApprover.name}.`,
+      });
+    }
+
     return res.status(403).json({
-      message: `Requisition total (₹${total}) exceeds your approval limit (₹${limit})`,
+      message: `Total ₹${total} exceeds your approval limit ₹${limit}. No higher approver found.`,
     });
   }
 
@@ -71,7 +102,7 @@ exports.approveRequisition = async (req, res) => {
     requisition: requisition._id,
     actor: req.user._id,
     action: "approved",
-    snapshot: { status: "approved", total, approver_limit: limit },
+    snapshot: { old_status: "submitted", new_status: "approved", total, approver_limit: limit },
   });
 
   res.status(200).json({ message: "Requisition approved" });
@@ -102,14 +133,14 @@ exports.rejectRequisition = async (req, res) => {
     return res.status(400).json({ message: "Rejection reason is required" });
   }
 
-  await Requisition.findByIdAndUpdate(req.params.id, { status: "rejected" });
+  await Requisition.findByIdAndUpdate(req.params.id, { status: "draft" });
 
   await logHistory({
     requisition: requisition._id,
     actor: req.user._id,
     action: "rejected",
     comment,
-    snapshot: { status: "rejected" },
+    snapshot: { old_status: "submitted", new_status: "draft", rejection_reason: comment },
   });
 
   res.status(200).json({ message: "Requisition rejected" });
@@ -136,7 +167,7 @@ exports.reopenRequisition = async (req, res) => {
     requisition: requisition._id,
     actor: req.user._id,
     action: "reopened",
-    snapshot: { status: "draft" },
+    snapshot: { old_status: "rejected", new_status: "draft" },
   });
 
   res.status(200).json({ message: "Requisition reopened" });
@@ -167,7 +198,7 @@ exports.markOrdered = async (req, res) => {
     requisition: requisition._id,
     actor: req.user._id,
     action: "ordered",
-    snapshot: { status: "ordered" },
+    snapshot: { old_status: "approved", new_status: "ordered" },
   });
 
   res.status(200).json({ message: "Requisition marked as ordered" });
@@ -210,11 +241,18 @@ exports.receiveItems = async (req, res) => {
   if (allReceived) {
     await Requisition.findByIdAndUpdate(req.params.id, { status: "received" });
     await logHistory({
-      requisition: requisition._id,
-      actor: req.user._id,
-      action: "received",
-      snapshot: { status: "received" },
-    });
+    requisition: requisition._id,
+    actor: req.user._id,
+    action: "received",
+    snapshot: {
+      old_status: "ordered",
+      new_status: "received",
+      received_updates: received_updates.map((u) => ({
+        itemId: u.itemId,
+        received_qty: u.received_qty,
+      })),
+    },
+  });
     return res.status(200).json({ message: "All items received — requisition complete" });
   }
 
@@ -222,8 +260,39 @@ exports.receiveItems = async (req, res) => {
     requisition: requisition._id,
     actor: req.user._id,
     action: "partially_received",
-    snapshot: { status: "ordered" },
+    snapshot: {
+      old_status: "ordered",
+      new_status: "ordered",
+      received_updates: received_updates.map((u) => ({
+        itemId: u.itemId,
+        received_qty: u.received_qty,
+      })),
+    },
   });
 
   res.status(200).json({ message: "Partial receipt recorded" });
+};
+
+exports.addComment = async (req, res) => {
+  const requisition = await Requisition.findById(req.params.id);
+
+  if (!requisition) {
+    return res.status(404).json({ message: "Requisition not found" });
+  }
+
+  const { comment } = req.body;
+
+  if (!comment) {
+    return res.status(400).json({ message: "Comment cannot be empty" });
+  }
+
+  await logHistory({
+    requisition: requisition._id,
+    actor: req.user._id,
+    action: "comment",
+    comment,
+    snapshot: { status: requisition.status },
+  });
+
+  res.status(201).json({ message: "Comment added" });
 };

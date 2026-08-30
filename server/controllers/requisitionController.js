@@ -49,7 +49,7 @@ exports.createRequisition = async (req, res) => {
 };
 
 exports.getRequisitions = async (req, res) => {
-  const { search, status, department, overdue, sort, page = 1, limit = 10 } = req.query;
+  const { search, status, department, overdue, sort, page = 1, limit = 10, owner, assigned } = req.query;
 
   let query = { is_archived: false };
 
@@ -65,15 +65,24 @@ exports.getRequisitions = async (req, res) => {
     query.status = { $in: ["ordered", "approved"] };
   }
 
+  // Filter by specific requester (owner) — approvers can use this to view one person's requisitions
+  if (owner) query.requester = owner;
+
+  // Filter to only requisitions assigned to the current approver
+  if (assigned === "true" && req.user.role === "approver") {
+    query.assigned_approvers = req.user._id;
+  }
+
   if (search) {
     query.$text = { $search: search };
   }
 
   let sortOption = { createdAt: -1 };
-  if (sort === "total_asc") sortOption = { total: 1 };
-  if (sort === "total_desc") sortOption = { total: -1 };
-  if (sort === "date_asc") sortOption = { createdAt: 1 };
-  if (sort === "needed_by") sortOption = { needed_by: 1 };
+if (sort === "total_asc") sortOption = { total: 1 };
+if (sort === "total_desc") sortOption = { total: -1 };
+if (sort === "date_asc") sortOption = { createdAt: 1 };
+if (sort === "needed_by") sortOption = { needed_by: 1 };
+if (sort === "status") sortOption = { status: 1 };
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -183,4 +192,39 @@ exports.restoreRequisition = async (req, res) => {
   });
 
   res.status(200).json({ message: "Requisition restored" });
+};
+
+exports.extendNeededBy = async (req, res) => {
+  const requisition = await Requisition.findById(req.params.id);
+
+  if (!requisition) {
+    return res.status(404).json({ message: "Requisition not found" });
+  }
+
+  if (requisition.status !== "ordered") {
+    return res.status(400).json({ message: "Can only extend needed-by date on ordered requisitions" });
+  }
+
+  const { needed_by } = req.body;
+
+  if (!needed_by) {
+    return res.status(400).json({ message: "needed_by date is required" });
+  }
+
+  const oldDate = requisition.needed_by;
+
+  // If date is extended and new date has passed, delete dismissals so alert re-surfaces
+  await AlertDismissal.deleteMany({ requisition: requisition._id });
+
+  await Requisition.findByIdAndUpdate(req.params.id, { needed_by });
+
+  await logHistory({
+    requisition: requisition._id,
+    actor: req.user._id,
+    action: "comment",
+    comment: `Needed-by date extended from ${oldDate.toISOString().split("T")[0]} to ${new Date(needed_by).toISOString().split("T")[0]}`,
+    snapshot: { old_needed_by: oldDate, new_needed_by: needed_by },
+  });
+
+  res.status(200).json({ message: "Needed-by date extended" });
 };

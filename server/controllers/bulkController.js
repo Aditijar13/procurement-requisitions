@@ -65,27 +65,25 @@ exports.bulkApprove = async (req, res) => {
 };
 
 exports.exportCSV = async (req, res) => {
-  // Open commitments = approved or ordered requisitions
+  // Open commitments = ordered requisitions
   const requisitions = await Requisition.find({
-    status: { $in: ["approved", "ordered"] },
+    status: "ordered",
     is_archived: false,
   }).populate("requester", "name department");
 
   const rows = [
-    ["ID", "Title", "Vendor", "Department", "Status", "Total", "Requester", "Needed By", "Created At"],
+    ["ID", "Title", "Vendor", "Department", "Total", "Requester", "Needed By"],
   ];
 
-  for (const req of requisitions) {
+  for (const r of requisitions) {
     rows.push([
-      req._id.toString(),
-      req.title,
-      req.vendor,
-      req.department,
-      req.status,
-      parseFloat(req.total.toString()),
-      req.requester.name,
-      req.needed_by.toISOString().split("T")[0],
-      req.createdAt.toISOString().split("T")[0],
+      r._id.toString(),
+      r.title,
+      r.vendor,
+      r.department,
+      parseFloat(r.total.toString()),
+      r.requester.name,
+      r.needed_by.toISOString().split("T")[0],
     ]);
   }
 

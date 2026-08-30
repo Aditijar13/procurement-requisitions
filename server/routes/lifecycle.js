@@ -7,6 +7,7 @@ const {
   reopenRequisition,
   markOrdered,
   receiveItems,
+   addComment,
 } = require("../controllers/lifecycleController");
 const {
   addApprover,
@@ -29,5 +30,6 @@ router.patch("/:id/receive", requireRole("approver"), receiveItems);
 // Approver assignment - any approver can add or remove another
 router.patch("/:id/approvers/add", requireRole("approver"), addApprover);
 router.patch("/:id/approvers/remove", requireRole("approver"), removeApprover);
+router.post("/:id/comment", addComment);
 
 module.exports = router;
