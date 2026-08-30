@@ -1,6 +1,7 @@
 const Requisition = require("../models/Requisition");
 const LineItem = require("../models/LineItem");
 const logHistory = require("../utils/historyLogger");
+const AlertDismissal = require("../models/AlertDismissal");
 
 const computeAndSaveTotal = async (requisitionId) => {
   const items = await LineItem.find({ requisition: requisitionId });
@@ -48,19 +49,53 @@ exports.createRequisition = async (req, res) => {
 };
 
 exports.getRequisitions = async (req, res) => {
+  const { search, status, department, overdue, sort, page = 1, limit = 10 } = req.query;
+
   let query = { is_archived: false };
 
-  // Requesters only see their own; approvers see all
   if (req.user.role === "requester") {
     query.requester = req.user._id;
   }
 
-  const requisitions = await Requisition.find(query)
-    .populate("requester", "name email department")
-    .populate("assigned_approvers", "name email")
-    .sort({ createdAt: -1 });
+  if (status) query.status = status;
+  if (department) query.department = department;
 
-  res.status(200).json({ requisitions });
+  if (overdue === "true") {
+    query.needed_by = { $lt: new Date() };
+    query.status = { $in: ["ordered", "approved"] };
+  }
+
+  if (search) {
+    query.$text = { $search: search };
+  }
+
+  let sortOption = { createdAt: -1 };
+  if (sort === "total_asc") sortOption = { total: 1 };
+  if (sort === "total_desc") sortOption = { total: -1 };
+  if (sort === "date_asc") sortOption = { createdAt: 1 };
+  if (sort === "needed_by") sortOption = { needed_by: 1 };
+
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  const [requisitions, total] = await Promise.all([
+    Requisition.find(query)
+      .populate("requester", "name email department")
+      .populate("assigned_approvers", "name email")
+      .sort(sortOption)
+      .skip(skip)
+      .limit(parseInt(limit)),
+    Requisition.countDocuments(query),
+  ]);
+
+  res.status(200).json({
+    requisitions,
+    pagination: {
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      pages: Math.ceil(total / parseInt(limit)),
+    },
+  });
 };
 
 exports.getRequisition = async (req, res) => {
@@ -93,6 +128,11 @@ exports.updateRequisition = async (req, res) => {
   }
 
   const { title, vendor, department, needed_by } = req.body;
+
+  // If needed_by date changed, delete all dismissal records so alerts re-surface
+  if (needed_by && new Date(needed_by).getTime() !== requisition.needed_by.getTime()) {
+    await AlertDismissal.deleteMany({ requisition: requisition._id });
+  }
 
   const updated = await Requisition.findByIdAndUpdate(
     req.params.id,
