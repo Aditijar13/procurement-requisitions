@@ -1,0 +1,217 @@
+.page {
+  max-width: 1100px;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.pageTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--gray-900);
+  letter-spacing: -0.5px;
+}
+
+.pageSubtitle {
+  font-size: 14px;
+  color: var(--gray-500);
+  margin-top: 3px;
+}
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.kpiCard {
+  background: #ffffff;
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+  padding: 20px 22px;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  cursor: default;
+}
+
+.kpiCard:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.07);
+  transform: translateY(-1px);
+}
+
+.kpiTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.kpiTitle {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--gray-500);
+  letter-spacing: 0.1px;
+}
+
+.kpiIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpiValue {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--gray-900);
+  letter-spacing: -1px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.kpiSubtitle {
+  font-size: 12px;
+  color: var(--gray-400);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+  padding: 22px;
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.chartCard {
+  grid-column: 1 / -1;
+}
+
+.cardTitle {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--gray-100);
+  letter-spacing: -0.1px;
+}
+
+.statusGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.statusCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border-left: 3px solid;
+  background: var(--gray-50);
+  transition: background 0.15s ease;
+}
+
+.statusCard:hover {
+  background: var(--gray-100);
+}
+
+.statusCardLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-700);
+  text-transform: capitalize;
+}
+
+.statusCardCount {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+.deptList {
+  display: flex;
+  flex-direction: column;
+}
+
+.deptRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.deptRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.deptInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.deptName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.deptCount {
+  font-size: 12px;
+  color: var(--gray-400);
+}
+
+.deptTotal {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+.emptyChart {
+  height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-400);
+  font-size: 14px;
+  background: var(--gray-50);
+  border-radius: 8px;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  color: var(--primary);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
