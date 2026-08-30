@@ -13,6 +13,7 @@ const {
   updateLineItem,
   deleteLineItem,
 } = require("../controllers/lineItemController");
+const { getHistory } = require("../controllers/historyController");
 const { protect, requireRole } = require("../middleware/auth");
 
 router.use(protect);
@@ -22,10 +23,14 @@ router.post("/", requireRole("requester"), createRequisition);
 router.get("/:id", getRequisition);
 router.put("/:id", requireRole("requester"), updateRequisition);
 router.patch("/:id/archive", archiveRequisition);
-router.patch("/:id/restore", archiveRequisition);
+router.patch("/:id/restore", restoreRequisition);
 
+// Line items
 router.post("/:id/items", requireRole("requester"), addLineItem);
 router.put("/:id/items/:itemId", requireRole("requester"), updateLineItem);
 router.delete("/:id/items/:itemId", requireRole("requester"), deleteLineItem);
+
+// Audit trail
+router.get("/:id/history", getHistory);
 
 module.exports = router;
