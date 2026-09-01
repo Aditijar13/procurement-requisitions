@@ -133,8 +133,8 @@ const RequisitionsList = () => {
             onChange={(e) => { setStatus(e.target.value); setPage(1); }}
           >
             <option value="">All Status</option>
-            <option value="draft">Draft</option>
-            <option value="submitted">Submitted</option>
+{user?.role === "requester" && <option value="draft">Draft</option>}
+<option value="submitted">Submitted</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
             <option value="ordered">Ordered</option>

@@ -53,11 +53,15 @@ exports.getRequisitions = async (req, res) => {
 
   let query = { is_archived: req.query.archived === "true" ? true : false };
 
-  if (req.user.role === "requester") {
-    query.requester = req.user._id;
-  }
+if (req.user.role === "requester") {
+  query.requester = req.user._id;
+}
 
-  if (status) query.status = status;
+if (status && !(req.user.role === "approver" && status === "draft")) {
+  query.status = status;
+} else if (req.user.role === "approver") {
+  query.status = { $ne: "draft" };
+}
   if (department) query.department = department;
 
   if (overdue === "true") {
