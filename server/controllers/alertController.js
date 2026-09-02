@@ -5,7 +5,7 @@ exports.getOverdueAlerts = async (req, res) => {
   // Find requisitions this approver is assigned to that are overdue
   const overdueRequisitions = await Requisition.find({
     assigned_approvers: req.user._id,
-    status: { $in: ["approved", "ordered"] },
+    status: "ordered",
     needed_by: { $lt: new Date() },
     is_archived: false,
   }).select("_id title vendor needed_by status total department");
