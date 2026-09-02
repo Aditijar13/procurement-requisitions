@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import RequisitionsList from "./pages/RequisitionsList";
 import RequisitionDetail from "./pages/RequisitionDetail";
 import CreateRequisition from "./pages/CreateRequisition";
+import EditRequisition from "./pages/EditRequisition";
 import ArchivedRequisitions from "./pages/ArchivedRequisitions";
 
 const ProtectedRoute = ({ children }) => {
@@ -35,6 +36,7 @@ const AppRoutes = () => {
         <Route path="requisitions" element={<RequisitionsList />} />
         <Route path="requisitions/new" element={<CreateRequisition />} />
         <Route path="requisitions/:id" element={<RequisitionDetail />} />
+        <Route path="requisitions/:id/edit" element={<EditRequisition />} />
         <Route path="archived" element={<ArchivedRequisitions />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
