@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axiosInstance";
 import { useAuth } from "../context/AuthContext";
-import { Search, Plus, ChevronLeft, ChevronRight, Filter } from "lucide-react";
+import toast from "react-hot-toast";
+import { Search, Plus, ChevronLeft, ChevronRight, Filter, CheckSquare } from "lucide-react";
 import styles from "./RequisitionsList.module.css";
 
 const StatusBadge = ({ status }) => {
@@ -43,6 +44,9 @@ const RequisitionsList = () => {
   const [owner, setOwner] = useState("");
   const [users, setUsers] = useState([]);
   const [assigned, setAssigned] = useState("");
+  const [selectedIds, setSelectedIds] = useState([]);
+    const [bulkLoading, setBulkLoading] = useState(false);
+  const [bulkMode, setBulkMode] = useState(false);
 
   const fetchRequisitions = useCallback(async () => {
     setLoading(true);
@@ -61,6 +65,8 @@ const RequisitionsList = () => {
       const res = await api.get(`/requisitions?${params.toString()}`);
       setRequisitions(res.data.requisitions);
       setPagination(res.data.pagination);
+      setSelectedIds([]);
+      setBulkMode(false);
     } catch (err) {
       console.error(err);
     } finally {
@@ -68,15 +74,12 @@ const RequisitionsList = () => {
     }
   }, [search, status, department, sort, page, overdue, owner, assigned]);
 
-  useEffect(() => {
-    fetchRequisitions();
-  }, [fetchRequisitions]);
+  useEffect(() => { fetchRequisitions(); }, [fetchRequisitions]);
 
   useEffect(() => {
     api.get("/users").then((res) => setUsers(res.data.users)).catch(() => {});
   }, []);
 
-  // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearch(searchInput);
@@ -85,6 +88,35 @@ const RequisitionsList = () => {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
+  const handleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+
+  const handleBulkApprove = async () => {
+    if (selectedIds.length === 0) return;
+    setBulkLoading(true);
+    try {
+      const res = await api.post("/bulk/approve", { requisitionIds: selectedIds });
+      const results = res.data.results;
+      const succeeded = results.filter((r) => r.success).length;
+      const failed = results.filter((r) => !r.success).length;
+
+      if (succeeded > 0) toast.success(`${succeeded} requisition${succeeded > 1 ? "s" : ""} approved`);
+      if (failed > 0) toast.error(`${failed} requisition${failed > 1 ? "s" : ""} could not be approved`);
+
+      setSelectedIds([]);
+      setBulkMode(false);
+      fetchRequisitions();
+    } catch (err) {
+      toast.error("Bulk approve failed");
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   const formatDate = (date) =>
     new Date(date).toLocaleDateString("en-IN", {
       day: "numeric", month: "short", year: "numeric",
@@ -92,6 +124,9 @@ const RequisitionsList = () => {
 
   const formatAmount = (amount) =>
     `₹${Number(amount).toLocaleString("en-IN")}`;
+
+  const submittedInView = requisitions.filter((r) => r.status === "submitted");
+  const visibleRequisitions = bulkMode ? submittedInView : requisitions;
 
   return (
     <div className={styles.page}>
@@ -102,15 +137,44 @@ const RequisitionsList = () => {
             {pagination.total || 0} total requisitions
           </p>
         </div>
-        {user?.role === "requester" && (
-          <button
-            className={styles.newBtn}
-            onClick={() => navigate("/requisitions/new")}
-          >
-            <Plus size={16} />
-            New Requisition
-          </button>
-        )}
+        <div className={styles.headerActions}>
+          {user?.role === "approver" && !bulkMode && (
+            <button
+              className={styles.bulkToggleBtn}
+              onClick={() => setBulkMode(true)}
+            >
+              <CheckSquare size={15} />
+              Bulk Approve
+            </button>
+          )}
+          {user?.role === "approver" && bulkMode && (
+            <>
+              <button
+                className={styles.cancelBtn}
+                onClick={() => { setBulkMode(false); setSelectedIds([]); }}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.bulkBtn}
+                onClick={handleBulkApprove}
+                disabled={bulkLoading || selectedIds.length === 0}
+              >
+                <CheckSquare size={15} />
+                {bulkLoading ? "Approving..." : `Approve ${selectedIds.length} Selected`}
+              </button>
+            </>
+          )}
+          {user?.role === "requester" && (
+            <button
+              className={styles.newBtn}
+              onClick={() => navigate("/requisitions/new")}
+            >
+              <Plus size={16} />
+              New Requisition
+            </button>
+          )}
+        </div>
       </div>
 
       <div className={styles.toolbar}>
@@ -133,8 +197,8 @@ const RequisitionsList = () => {
             onChange={(e) => { setStatus(e.target.value); setPage(1); }}
           >
             <option value="">All Status</option>
-{user?.role === "requester" && <option value="draft">Draft</option>}
-<option value="submitted">Submitted</option>
+            {user?.role === "requester" && <option value="draft">Draft</option>}
+            <option value="submitted">Submitted</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
             <option value="ordered">Ordered</option>
@@ -152,42 +216,43 @@ const RequisitionsList = () => {
             <option value="Finance">Finance</option>
             <option value="Operations">Operations</option>
             <option value="Marketing">Marketing</option>
+            <option value="Procurement">Procurement</option>
           </select>
 
           <select
-  className={styles.select}
-  value={overdue}
-  onChange={(e) => { setOverdue(e.target.value); setPage(1); }}
->
-  <option value="">All</option>
-  <option value="true">Overdue Only</option>
-</select>
+            className={styles.select}
+            value={overdue}
+            onChange={(e) => { setOverdue(e.target.value); setPage(1); }}
+          >
+            <option value="">All</option>
+            <option value="true">Overdue Only</option>
+          </select>
 
-{user?.role === "approver" && (
-  <select
-    className={styles.select}
-    value={assigned}
-    onChange={(e) => { setAssigned(e.target.value); setPage(1); }}
-  >
-    <option value="">All Requisitions</option>
-    <option value="true">Assigned to Me</option>
-  </select>
-)}
+          {user?.role === "approver" && (
+            <select
+              className={styles.select}
+              value={assigned}
+              onChange={(e) => { setAssigned(e.target.value); setPage(1); }}
+            >
+              <option value="">All Requisitions</option>
+              <option value="true">Assigned to Me</option>
+            </select>
+          )}
 
-{user?.role === "approver" && (
-  <select
-    className={styles.select}
-    value={owner}
-    onChange={(e) => { setOwner(e.target.value); setPage(1); }}
-  >
-    <option value="">All Owners</option>
-    {users
-      .filter((u) => u.role === "requester")
-      .map((u) => (
-        <option key={u._id} value={u._id}>{u.name}</option>
-      ))}
-  </select>
-)}
+          {user?.role === "approver" && (
+            <select
+              className={styles.select}
+              value={owner}
+              onChange={(e) => { setOwner(e.target.value); setPage(1); }}
+            >
+              <option value="">All Owners</option>
+              {users
+                .filter((u) => u.role === "requester")
+                .map((u) => (
+                  <option key={u._id} value={u._id}>{u.name}</option>
+                ))}
+            </select>
+          )}
 
           <select
             className={styles.select}
@@ -206,9 +271,9 @@ const RequisitionsList = () => {
       <div className={styles.tableWrapper}>
         {loading ? (
           <div className={styles.loading}>Loading...</div>
-        ) : requisitions.length === 0 ? (
+                ) : visibleRequisitions.length === 0 ? (
           <div className={styles.empty}>
-            <p>No requisitions found.</p>
+            <p>{bulkMode ? "No submitted requisitions to approve." : "No requisitions found."}</p>
             {user?.role === "requester" && (
               <button
                 className={styles.newBtn}
@@ -223,6 +288,9 @@ const RequisitionsList = () => {
           <table className={styles.table}>
             <thead>
               <tr>
+                               {user?.role === "approver" && bulkMode && (
+                  <th style={{ width: 40 }} />
+                )}
                 <th>Title</th>
                 <th>Vendor</th>
                 <th>Department</th>
@@ -232,17 +300,27 @@ const RequisitionsList = () => {
               </tr>
             </thead>
             <tbody>
-              {requisitions.map((req) => (
+                            {visibleRequisitions.map((req) => (
                 <tr
                   key={req._id}
                   onClick={() => navigate(`/requisitions/${req._id}`)}
                   className={styles.row}
                 >
+                  {user?.role === "approver" && bulkMode && (
+                    <td onClick={(e) => e.stopPropagation()}>
+                      {req.status === "submitted" && (
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(req._id)}
+                          onChange={() => handleSelect(req._id)}
+                          className={styles.checkbox}
+                        />
+                      )}
+                    </td>
+                  )}
                   <td>
                     <span className={styles.title}>{req.title}</span>
-                    <span className={styles.requester}>
-                      {req.requester?.name}
-                    </span>
+                    <span className={styles.requester}>{req.requester?.name}</span>
                   </td>
                   <td className={styles.vendor}>{req.vendor}</td>
                   <td className={styles.dept}>{req.department}</td>
