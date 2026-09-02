@@ -19,8 +19,8 @@ const Sidebar = () => {
     <aside className={styles.sidebar}>
       <div className={styles.logo}>
         <div className={styles.logoMark}>
-  <ShoppingCart size={16} color="white" strokeWidth={2} />
-</div>
+          <ShoppingCart size={16} color="white" strokeWidth={2} />
+        </div>
         <span className={styles.logoText}>ProcureFlow</span>
       </div>
 
