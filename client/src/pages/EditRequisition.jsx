@@ -216,6 +216,7 @@ const EditRequisition = () => {
                   name="needed_by"
                   className={styles.input}
                   value={form.needed_by}
+                  min={new Date().toISOString().split("T")[0]}
                   onChange={handleFormChange}
                 />
               </div>
