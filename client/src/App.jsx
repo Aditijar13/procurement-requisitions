@@ -8,6 +8,7 @@ import RequisitionDetail from "./pages/RequisitionDetail";
 import CreateRequisition from "./pages/CreateRequisition";
 import EditRequisition from "./pages/EditRequisition";
 import ArchivedRequisitions from "./pages/ArchivedRequisitions";
+import Alerts from "./pages/Alerts";
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -38,6 +39,7 @@ const AppRoutes = () => {
         <Route path="requisitions/:id" element={<RequisitionDetail />} />
         <Route path="requisitions/:id/edit" element={<EditRequisition />} />
         <Route path="archived" element={<ArchivedRequisitions />} />
+        <Route path="alerts" element={<Alerts />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

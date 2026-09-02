@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useEffect, useState } from "react";
 import api from "../../api/axiosInstance";
-import { ShoppingCart, LayoutDashboard, ClipboardList, Archive, LogOut } from "lucide-react";
+import { ShoppingCart, LayoutDashboard, ClipboardList, Archive, LogOut, AlertTriangle } from "lucide-react";
 import styles from "./Sidebar.module.css";
 
 const Sidebar = () => {
@@ -43,10 +43,22 @@ const Sidebar = () => {
         >
           <ClipboardList size={17} />
           Requisitions
-          {overdueCount > 0 && (
-            <span className={styles.badge}>{overdueCount}</span>
-          )}
         </NavLink>
+
+        {user?.role === "approver" && (
+          <NavLink
+            to="/alerts"
+            className={({ isActive }) =>
+              `${styles.navLink} ${isActive ? styles.active : ""}`
+            }
+          >
+            <AlertTriangle size={17} />
+            Alerts
+            {overdueCount > 0 && (
+              <span className={styles.badge}>{overdueCount}</span>
+            )}
+          </NavLink>
+        )}
 
         <NavLink
           to="/archived"
