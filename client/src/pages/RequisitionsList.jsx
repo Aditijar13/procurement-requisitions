@@ -47,6 +47,7 @@ const RequisitionsList = () => {
   const [selectedIds, setSelectedIds] = useState([]);
     const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkMode, setBulkMode] = useState(false);
+  const [bulkResults, setBulkResults] = useState(null);
 
   const fetchRequisitions = useCallback(async () => {
     setLoading(true);
@@ -101,12 +102,16 @@ const RequisitionsList = () => {
     try {
       const res = await api.post("/bulk/approve", { requisitionIds: selectedIds });
       const results = res.data.results;
-      const succeeded = results.filter((r) => r.success).length;
-      const failed = results.filter((r) => !r.success).length;
+      const succeeded = results.filter((r) => r.success);
+      const failed = results.filter((r) => !r.success);
 
-      if (succeeded > 0) toast.success(`${succeeded} requisition${succeeded > 1 ? "s" : ""} approved`);
-      if (failed > 0) toast.error(`${failed} requisition${failed > 1 ? "s" : ""} could not be approved`);
+      // Attach title to each result for display
+      const enriched = results.map((r) => {
+        const req = requisitions.find((q) => q._id === r.id);
+        return { ...r, title: req?.title || r.id };
+      });
 
+      setBulkResults(enriched);
       setSelectedIds([]);
       setBulkMode(false);
       fetchRequisitions();
@@ -378,6 +383,24 @@ const RequisitionsList = () => {
           >
             <ChevronRight size={16} />
           </button>
+        </div>
+      )}
+      {bulkResults && (
+        <div className={styles.modalOverlay} onClick={() => setBulkResults(null)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>Bulk Approve Results</h2>
+              <button className={styles.modalClose} onClick={() => setBulkResults(null)}>✕</button>
+            </div>
+            <div className={styles.modalBody}>
+              {bulkResults.map((r, i) => (
+                <div key={i} className={`${styles.resultRow} ${r.success ? styles.resultSuccess : styles.resultFail}`}>
+                  <span className={styles.resultTitle}>{r.title}</span>
+                  <span className={styles.resultMsg}>{r.success ? "Approved" : r.message}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

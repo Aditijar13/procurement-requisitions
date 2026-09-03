@@ -59,7 +59,7 @@ const Alerts = () => {
   <div className={styles.headerContent}>
     <h1 className={styles.pageTitle}>Overdue Alerts</h1>
     <p className={styles.pageSubtitle}>
-      Ordered requisitions assigned to you that are past their needed-by date
+      {alerts.length} overdue alert{alerts.length !== 1 ? "s" : ""} · Ordered requisitions assigned to you past their needed-by date
     </p>
   </div>
 </div>

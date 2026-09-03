@@ -60,15 +60,17 @@ const Sidebar = () => {
           </NavLink>
         )}
 
-        <NavLink
-          to="/archived"
-          className={({ isActive }) =>
-            `${styles.navLink} ${isActive ? styles.active : ""}`
-          }
-        >
-          <Archive size={17} />
-          Archived
-        </NavLink>
+        {user?.role === "requester" && (
+          <NavLink
+            to="/archived"
+            className={({ isActive }) =>
+              `${styles.navLink} ${isActive ? styles.active : ""}`
+            }
+          >
+            <Archive size={17} />
+            Archived
+          </NavLink>
+        )}
       </nav>
 
       <div className={styles.userSection}>
