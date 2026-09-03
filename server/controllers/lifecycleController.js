@@ -1,6 +1,7 @@
 const Requisition = require("../models/Requisition");
 const LineItem = require("../models/LineItem");
 const User = require("../models/User");
+const mongoose = require("mongoose");
 const logHistory = require("../utils/historyLogger");
 
 exports.submitRequisition = async (req, res) => {
@@ -64,7 +65,7 @@ exports.approveRequisition = async (req, res) => {
     const higherApprover = await User.findOne({
       role: "approver",
       _id: { $ne: req.user._id },
-      approval_limit: { $gte: total },
+      approval_limit: { $gte: mongoose.Types.Decimal128.fromString(total.toString()) },
     }).sort({ approval_limit: 1 });
 
     if (higherApprover) {
