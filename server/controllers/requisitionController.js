@@ -217,8 +217,11 @@ exports.extendNeededBy = async (req, res) => {
 
   const oldDate = requisition.needed_by;
 
-  // If date is extended and new date has passed, delete dismissals so alert re-surfaces
-  await AlertDismissal.deleteMany({ requisition: requisition._id });
+  // Only clear dismissals if the new date has already passed - so the alert re-surfaces.
+  // If the new date is in the future, the requisition is no longer overdue - no alert needed.
+  if (new Date(needed_by) < new Date()) {
+    await AlertDismissal.deleteMany({ requisition: requisition._id });
+  }
 
   await Requisition.findByIdAndUpdate(req.params.id, { needed_by });
 
