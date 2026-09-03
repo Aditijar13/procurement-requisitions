@@ -400,6 +400,18 @@ const RequisitionDetail = () => {
                         {entry.snapshot.old_status} → {entry.snapshot.new_status}
                       </p>
                     )}
+                    {entry.snapshot?.received_updates?.length > 0 && (
+                      <div className={styles.receiptDetails}>
+                        {entry.snapshot.received_updates.map((u, i) => {
+                          const item = lineItems.find((l) => l._id === u.itemId);
+                          return (
+                            <span key={i} className={styles.receiptItem}>
+                              {item?.description || "Item"}: {u.received_qty} received
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
                     <span className={styles.timelineDate}>{formatDate(entry.created_at)}</span>
                   </div>
                 </div>
