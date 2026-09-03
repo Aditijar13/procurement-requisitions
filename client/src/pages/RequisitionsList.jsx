@@ -128,6 +128,23 @@ const RequisitionsList = () => {
   const submittedInView = requisitions.filter((r) => r.status === "submitted");
   const visibleRequisitions = bulkMode ? submittedInView : requisitions;
 
+  const handleExport = async () => {
+    try {
+      const res = await api.get("/bulk/export", { responseType: "blob" });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "open-commitments.csv");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("CSV exported successfully");
+    } catch (err) {
+      toast.error("Failed to export CSV");
+    }
+  };
+  
   return (
     <div className={styles.page}>
       <div className={styles.pageHeader}>
@@ -139,13 +156,21 @@ const RequisitionsList = () => {
         </div>
         <div className={styles.headerActions}>
           {user?.role === "approver" && !bulkMode && (
-            <button
-              className={styles.bulkToggleBtn}
-              onClick={() => setBulkMode(true)}
-            >
-              <CheckSquare size={15} />
-              Bulk Approve
-            </button>
+            <>
+              <button
+                className={styles.exportBtn}
+                onClick={handleExport}
+              >
+                Export CSV
+              </button>
+              <button
+                className={styles.bulkToggleBtn}
+                onClick={() => setBulkMode(true)}
+              >
+                <CheckSquare size={15} />
+                Bulk Approve
+              </button>
+            </>
           )}
           {user?.role === "approver" && bulkMode && (
             <>
