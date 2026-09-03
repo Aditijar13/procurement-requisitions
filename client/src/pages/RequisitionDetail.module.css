@@ -728,3 +728,12 @@
 .showMoreBtn:hover {
   opacity: 0.7;
 }
+
+.assignHint {
+  font-size: 13px;
+  color: var(--gray-500);
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 10px 14px;
+}

@@ -209,6 +209,13 @@ const RequisitionDetail = () => {
                 </button>
               </>
             )}
+            
+            {user?.role === "approver" && !isAssigned && status === "submitted" && (
+              <div className={styles.assignHint}>
+                Add yourself as approver below to approve this requisition
+              </div>
+            )}
+            
             {user?.role === "approver" && isAssigned && status === "submitted" && (
               <>
                 <button className={styles.btnSuccess} onClick={() => handleAction("approve")}>
