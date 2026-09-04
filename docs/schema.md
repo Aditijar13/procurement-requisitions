@@ -311,36 +311,19 @@ Line items, history entries, and alert dismissals are otherwise kept in separate
 
 ## What would break first if this had 100x the data?
 
-The first things I would expect to need attention are query performance and the amount of related data being loaded.
+**The dashboard.** 
 
-### Requisition listing
+Every time someone opens it, the server runs five or six aggregation queries at once : count submitted, sum ordered totals, count overdue, group by status, group by department, weekly chart. All scanning the full collection every time. With a lot of data and multiple people opening the dashboard simultaneously this would be the first thing I'd notice slowing down.
 
-The requisition list supports searching, filtering, sorting, pagination, and populating related users.
+**The alert polling.** 
 
-With much more data, combinations of text search and filters could become more expensive. The current indexes provide a starting point, but the indexes would probably need to be reviewed based on the queries used most often.
+The alert badge re-runs a query every 60 seconds for every approver logged in. Each query finds ordered requisitions past their needed-by date, assigned to that approver, then filters out dismissed ones. With many approvers polling simultaneously and a large requisitions table this runs constantly and would add up.
 
-### Line item total calculations
+**History entries.** 
 
-Whenever a line item is added, updated, or deleted, the application reads the line items for that requisition and recalculates the total.
+One active requisition can have a lot of history : every status change, comment, receipt, approver change. The timeline loads all of them at once. With heavily used requisitions this would grow and the query would return more data than needed.
 
-This is fine for the current project size, but with much larger requisitions or many simultaneous updates, that repeated calculation could become more expensive.
+**The CSV export.** Right now it loads every ordered requisition into memory at once and builds the CSV string. With thousands of ordered requisitions this could become a memory problem on the server.
 
-### History data
-
-History entries can grow faster than the number of requisitions because one requisition can produce many events over time.
-
-At a much larger scale, history queries would need efficient indexing and pagination. The current index on `requisition` and `created_at` is a starting point for this.
-
-### Related user lookups
-
-Some requisition queries populate the requester and assigned approvers.
-
-With a much larger number of requisitions, repeatedly loading related user information could add more database work, especially for large list pages.
-
-### Pagination
-
-The current requisition listing uses `skip` and `limit`.
-
-At very large page numbers, `skip` can become less efficient. If the data grew significantly, cursor-based pagination could be considered.
 
 The current schema is suitable for the size and scope of this project, but these areas would be the first ones I would review if the amount of data increased significantly.
