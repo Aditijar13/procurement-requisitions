@@ -1,19 +1,31 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation} from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useEffect, useState } from "react";
 import api from "../../api/axiosInstance";
 import { ShoppingCart, LayoutDashboard, ClipboardList, Archive, LogOut, AlertTriangle } from "lucide-react";
 import styles from "./Sidebar.module.css";
 
+
 const Sidebar = () => {
   const { user, logout } = useAuth();
+  const location = useLocation();
   const [overdueCount, setOverdueCount] = useState(0);
 
   useEffect(() => {
-    if (user?.role === "approver") {
+    if (user?.role !== "approver") return;
+
+    const fetchCount = () => {
       api.get("/alerts").then((res) => setOverdueCount(res.data.count)).catch(() => {});
-    }
-  }, [user]);
+    };
+
+    fetchCount();
+    const interval = setInterval(fetchCount, 60000);
+    window.addEventListener("alerts-updated", fetchCount);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("alerts-updated", fetchCount);
+    };
+  }, [user, location.pathname]);
 
   return (
     <aside className={styles.sidebar}>

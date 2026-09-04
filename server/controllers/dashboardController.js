@@ -1,4 +1,5 @@
 const Requisition = require("../models/Requisition");
+const mongoose = require("mongoose");
 
 exports.getDashboard = async (req, res) => {
   const now = new Date();
@@ -6,6 +7,11 @@ exports.getDashboard = async (req, res) => {
   const startOfWeek = new Date(now);
   startOfWeek.setDate(now.getDate() - now.getDay());
   startOfWeek.setHours(0, 0, 0, 0);
+
+  const isRequester = req.user.role === "requester";
+  const baseMatch = isRequester
+    ? { is_archived: false, requester: new mongoose.Types.ObjectId(req.user._id) }
+    : { is_archived: false };
 
   const [
     statusBreakdown,
@@ -16,12 +22,12 @@ exports.getDashboard = async (req, res) => {
     receivedThisWeek,
   ] = await Promise.all([
     Requisition.aggregate([
-      { $match: { is_archived: false } },
+      { $match: baseMatch },
       { $group: { _id: "$status", count: { $sum: 1 } } },
     ]),
 
     Requisition.aggregate([
-      { $match: { is_archived: false, status: { $nin: ["draft", "rejected"] } } },
+      { $match: { ...baseMatch, status: { $nin: ["draft", "rejected"] } } },
       {
         $group: {
           _id: "$department",
@@ -35,6 +41,7 @@ exports.getDashboard = async (req, res) => {
     Requisition.aggregate([
       {
         $match: {
+          ...baseMatch,
           status: "received",
           updatedAt: { $gte: eightWeeksAgo },
         },
@@ -55,7 +62,7 @@ exports.getDashboard = async (req, res) => {
     Requisition.aggregate([
       {
         $match: {
-          is_archived: false,
+          ...baseMatch,
           status: { $in: ["approved", "ordered"] },
         },
       },
@@ -70,16 +77,16 @@ exports.getDashboard = async (req, res) => {
 
     // Overdue — ordered requisitions past needed_by date
     Requisition.countDocuments({
+      ...baseMatch,
       status: "ordered",
       needed_by: { $lt: now },
-      is_archived: false,
     }),
 
     // Received this week
     Requisition.countDocuments({
+      ...baseMatch,
       status: "received",
       updatedAt: { $gte: startOfWeek },
-      is_archived: false,
     }),
   ]);
 

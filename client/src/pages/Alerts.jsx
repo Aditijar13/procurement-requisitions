@@ -31,6 +31,7 @@ const Alerts = () => {
       await api.post("/alerts/dismiss", { requisitionId });
       toast.success("Alert dismissed");
       setAlerts((prev) => prev.filter((a) => a._id !== requisitionId));
+      window.dispatchEvent(new Event("alerts-updated"));
     } catch {
       toast.error("Failed to dismiss");
     }

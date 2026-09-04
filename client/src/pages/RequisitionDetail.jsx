@@ -409,7 +409,7 @@ const RequisitionDetail = () => {
                     {entry.snapshot?.received_updates?.length > 0 && (
                       <div className={styles.receiptDetails}>
                         {entry.snapshot.received_updates.map((u, i) => {
-                          const item = lineItems.find((l) => l._id === u.itemId);
+                          const item = lineItems.find((l) => l._id?.toString() === u.itemId?.toString());
                           return (
                             <span key={i} className={styles.receiptItem}>
                               {item?.description || "Item"}: {u.received_qty} received

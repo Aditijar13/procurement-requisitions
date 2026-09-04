@@ -170,6 +170,9 @@ const run = async () => {
       { description: "High-Vis Reflective Vest",   quantity: 30, unit_price: 320,  received_qty: 30 },
     ],
   });
+  const r6Items = await LineItem.find({ requisition: r6._id });
+  const r6Helmet = r6Items.find(i => i.description === "Industrial Safety Helmet");
+  const r6Vest = r6Items.find(i => i.description === "High-Vis Reflective Vest");
   await log(r6._id, rohan._id,  "created",   "", { status: "draft" });
   await log(r6._id, rohan._id,  "submitted",  "", { old_status: "draft", new_status: "submitted" });
   await log(r6._id, arjun._id,  "approved",   "", { old_status: "submitted", new_status: "approved", approver_limit: 300000 });
@@ -177,8 +180,8 @@ const run = async () => {
   await log(r6._id, arjun._id,  "partially_received", "", {
     old_status: "ordered", new_status: "ordered",
     received_updates: [
-      { itemId: "placeholder", description: "Industrial Safety Helmet", received_qty: 10 },
-      { itemId: "placeholder", description: "High-Vis Reflective Vest", received_qty: 30 },
+      { itemId: r6Helmet._id, description: r6Helmet.description, received_qty: 10 },
+      { itemId: r6Vest._id, description: r6Vest.description, received_qty: 30 },
     ],
   });
 
@@ -197,15 +200,18 @@ const run = async () => {
       { description: "A4 Paper Ream 500 Sheets",           quantity: 50, unit_price: 290, received_qty: 50 },
     ],
   });
+  const r7Items = await LineItem.find({ requisition: r7._id });
+  const r7Black = r7Items.find(i => i.description === "HP LaserJet Toner Cartridge Black");
+  const r7Paper = r7Items.find(i => i.description === "A4 Paper Ream 500 Sheets");
   await log(r7._id, priya._id,  "created",   "", { status: "draft" });
   await log(r7._id, priya._id,  "submitted",  "", { old_status: "draft", new_status: "submitted" });
   await log(r7._id, meera._id,  "approved",   "", { old_status: "submitted", new_status: "approved", approver_limit: 75000 });
   await log(r7._id, meera._id,  "ordered",    "", { old_status: "approved",  new_status: "ordered" });
-  await log(r7._id, meera._id,  "partially_received", "", {
+    await log(r7._id, meera._id,  "partially_received", "", {
     old_status: "ordered", new_status: "ordered",
     received_updates: [
-      { itemId: "placeholder", description: "HP LaserJet Toner Cartridge Black", received_qty: 4 },
-      { itemId: "placeholder", description: "A4 Paper Ream 500 Sheets", received_qty: 50 },
+      { itemId: r7Black._id, description: r7Black.description, received_qty: 4 },
+      { itemId: r7Paper._id, description: r7Paper.description, received_qty: 50 },
     ],
   });
 
