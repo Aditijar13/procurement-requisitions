@@ -200,14 +200,9 @@ const RequisitionDetail = () => {
               </>
             )}
             {isRequester && status === "rejected" && (
-              <>
-                <button className={styles.btnSecondary} onClick={() => handleAction("reopen")}>
-                  Reopen
-                </button>
-                <button className={styles.btnDanger} onClick={handleArchive}>
-                  Archive
-                </button>
-              </>
+              <button className={styles.btnDanger} onClick={handleArchive}>
+                Archive
+              </button>
             )}
             
             {user?.role === "approver" && !isAssigned && status === "submitted" && (
@@ -216,6 +211,17 @@ const RequisitionDetail = () => {
               </div>
             )}
             
+            {isRequester && status === "submitted" && (
+              <button className={styles.btnDanger} onClick={handleArchive}>
+                Archive
+              </button>
+            )}
+            {isRequester && status === "received" && (
+              <button className={styles.btnDanger} onClick={handleArchive}>
+                Archive
+              </button>
+            )}
+
             {user?.role === "approver" && isAssigned && status === "submitted" && (
               <>
                 <button className={styles.btnSuccess} onClick={() => handleAction("approve")}>

@@ -76,7 +76,7 @@ const Dashboard = () => {
   };
 
   const chartData = data?.weekly_received?.map((w) => ({
-    week: `Wk ${w._id.week}`,
+    week: getWeekLabel(w._id.week, w._id.year),
     fullLabel: getWeekLabel(w._id.week, w._id.year),
     received: w.count,
   })) || [];
@@ -185,10 +185,10 @@ const CustomTooltip = ({ active, payload, label }) => {
           <h2 className={styles.cardTitle}>By Department</h2>
           <div className={styles.deptList}>
             {data?.department_breakdown?.map((dept) => (
-              <div key={dept._id} className={styles.deptRow}>
+              <div key={dept._id} className={styles.deptCard}>
                 <div className={styles.deptInfo}>
                   <span className={styles.deptName}>{dept._id}</span>
-                  <span className={styles.deptCount}>{dept.count} requisitions</span>
+                  <span className={styles.deptCount}>{dept.count} requisition{dept.count !== 1 ? "s" : ""}</span>
                 </div>
                 <span className={styles.deptTotal}>
                   ₹{dept.total.toLocaleString("en-IN")}
@@ -208,7 +208,8 @@ const CustomTooltip = ({ active, payload, label }) => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                 <XAxis
                   dataKey="week"
-                  tick={{ fontSize: 12, fill: "#6b7280" }}
+                  tick={{ fontSize: 10 }}
+                  interval={0}
                   axisLine={false}
                   tickLine={false}
                 />

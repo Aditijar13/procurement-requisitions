@@ -85,6 +85,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
+  align-items: stretch;
 }
 
 .card {
@@ -93,6 +94,8 @@
   border-radius: 14px;
   padding: 22px;
   transition: box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .card:hover {
@@ -150,19 +153,23 @@
 .deptList {
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
 
-.deptRow {
+.deptCard {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 11px 0;
-  border-bottom: 1px solid var(--gray-100);
+  padding: 14px 16px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  transition: background 0.15s ease;
 }
 
-.deptRow:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
+.deptCard:hover {
+  background: #eef2ff;
+  border-color: #c7d2fe;
 }
 
 .deptInfo {
