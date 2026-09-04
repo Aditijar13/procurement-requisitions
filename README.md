@@ -2,6 +2,8 @@
 
 A full-stack application for managing purchase requisitions from request through delivery, with role-based approval workflows, overdue tracking, and a full audit trail.
 
+**Live application:** https://procurement-requisitions.vercel.app
+
 ---
 
 ## Features

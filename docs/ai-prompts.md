@@ -30,7 +30,6 @@ Express 5 wraps async handlers in a Promise automatically so calling next(err) i
 ### What you corrected
 Removed try/catch from all controllers and the next parameter from the pre-save hook. Applied the same fix to the auth middleware. Worked immediately.
 
-
 ---
 
 ## Decimal128 returning as object instead of number in API responses
@@ -39,11 +38,10 @@ Removed try/catch from all controllers and the next parameter from the pre-save 
 My approval_limit field is coming back as `{"$numberDecimal": "100000"}` in the API response instead of a plain number. The toJSON transform on the schema is not fixing it. Why?
 
 ### What you got
-AI explained that the toJSON transform fires when Mongoose converts a whole document to JSON, but when you manually construct a response object in a controller and access `user.approval_limit` directly, the field value has not gone through the transform yet. The fix is to call `parseFloat(value.toString())` explicitly when building the response.
+The toJSON transform fires when Mongoose converts a whole document to JSON, but when you manually construct a response object in a controller and access `user.approval_limit` directly, the field value has not gone through the transform yet. The fix is to call `parseFloat(value.toString())` explicitly when building the response.
 
 ### What you corrected
 Added `parseFloat(value.toString())` explicitly in the auth controller response. Also added toJSON transforms on the Requisition and LineItem models for their Decimal128 fields. All monetary values serialized correctly after that.
-
 
 ---
 
@@ -63,7 +61,6 @@ Got the direct connection string from Atlas and updated the MONGO_URI in .env. C
 
 ---
 
-
 ## Rejection going to wrong status
 
 ### Prompt
@@ -81,7 +78,7 @@ Changed the rejectRequisition controller to set status to draft instead of rejec
 ## isAssigned check always returning false for approver
 
 ### Prompt
-The approve and reject buttons are not showing for the approver on a submitted requisition even though spprover is assigned. I added console logs and isAssigned is always false. The assigned_approvers array has data. What's wrong?
+The approve and reject buttons are not showing for the approver on a submitted requisition even though approver is assigned. I added console logs and isAssigned is always false. The assigned_approvers array has data. What's wrong?
 
 ### What you got
 AI identified that `a._id === user?._id` was comparing a MongoDB ObjectId string from the populated document against the user id stored in localStorage from the login response. The login response returns `id` not `_id` so `user._id` was undefined.
@@ -105,6 +102,8 @@ A detailed mockup with header metadata, line items table, status workflow sideba
 ### What you corrected
 The mockup had fields not in our requirements including priority, attachment tabs, requisition type, and a multi-step status workflow sidebar. I used it only as a layout reference. The actual page was built based on our five collections and the README requirements. Several iterations were needed for the table styling, history toggle behaviour, and role-based action button visibility.
 
+---
+
 ## Polishing the documentation files
 
 ### Prompt
@@ -115,6 +114,8 @@ Expanded the bullet points into full paragraphs keeping my structure and reasoni
 
 ### What you corrected
 Several decisions had the reasoning made too generic or the tradeoff flipped. Rewrote those sections to match what actually happened during development, including Decision 9 which I reversed mid-build and the alert re-surface logic which had the wrong condition in the first implementation.
+
+---
 
 ## Git rebase losing commit timestamps
 
@@ -140,5 +141,54 @@ Initially suggested just returning a 403 error with a message saying the limit w
 ### What you corrected
 That was incomplete — the README says to find and assign a higher approver automatically. Updated the controller to query for the next approver with a sufficient limit and add them to assigned_approvers before returning the error. This is the clearest case where the first answer needed real correction.
 
+---
+
+## Alert re-surface logic — wrong condition initially
+
+### Prompt
+When the needed-by date is extended on an ordered requisition, should I clear all alert dismissals so the alert comes back?
+
+### What you got
+Yes, clear all dismissals whenever the date changes.
+
+### What you corrected
+Wrong — if the new date is in the future the requisition is no longer overdue so the alert should not reappear. Changed it to only clear dismissals if the new date has also already passed.
 
 ---
+
+## Generating seed data for demo
+
+### Prompt
+I need seed data covering every requisition status, overdue alerts, partial receipt, and approval limit escalation.
+
+### What you got
+Suggested the data structure : 4 users with two requesters and two approvers with different limits, requisitions covering every status from draft to received including two overdue ordered ones, history entries for each, and partial receipt data on the ordered ones.
+
+### What you corrected
+Nothing structural — I reviewed the data and adjusted the needed_by dates so the dashboard KPIs would show meaningful numbers, and changed one received requisition date to fall within the current week so the weekly chart had data to display.
+
+---
+
+## Writing the README
+
+### Prompt
+Based on my project structure, roles, features, and tech stack, help me write a proper README.
+
+### What you got
+A draft README with features, tech stack, roles, project structure, setup instructions, and a docs table.
+
+### What you corrected
+The demo credentials section had placeholder names from earlier testing. Updated to match the actual seed users. Also reviewed the feature list against the spec to make sure nothing was overstated.
+
+---
+
+## Alert badge not updating after dismiss
+
+### Prompt
+The alert badge in the sidebar shows the old count even after dismissing an alert on the alerts page. The two components are independent so they don't share state. How do I make the badge refresh immediately after dismiss?
+
+### What you got
+Suggested using a custom browser event : dispatch `alerts-updated` from the Alerts page after dismiss, and listen for it in the Sidebar to trigger an immediate refetch.
+
+### What you corrected
+Also found that the sidebar had no polling at all — the useEffect only ran once on mount with no setInterval. Added 60-second polling alongside the event listener so the badge stays fresh even without user interaction.
