@@ -175,3 +175,12 @@ React UI Update
 ---
 
 ## What did you decide *not* to build, and why?
+
+
+**No register page.** Users are created through the seed script. The spec doesn't ask for self-registration and building one would mean deciding things like who assigns approval limits and roles, that's an admin concern that wasn't in scope.
+
+**No auto-assignment of approvers.** The spec says any approver can add or remove eligibility on a requisition but doesn't say who gets assigned automatically. I didn't want to invent a rule that wasn't asked for. The full queue is visible to all approvers so nothing gets missed, someone just has to manually assign.
+
+**No real-time updates.** The alert badge polls every 60 seconds. The spec doesn't mention live updates and polling was good enough for what was asked.
+
+**None of the stretch goals.** I finished all 10 goals and had some time left but chose to spend it on fixing edge cases and writing proper documentation rather than starting a stretch feature half-done.

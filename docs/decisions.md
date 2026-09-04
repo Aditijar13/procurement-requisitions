@@ -94,8 +94,26 @@ These are the decisions that actually shaped the codebase. Each one had a real a
 
 ## Decision 12
 
-- **Chose:** Server-side search, filtering, sorting, and pagination for the requisitions list.
+- **Chose:** CSS Modules for component styling.
 
-- **Rejected:** Loading all requisitions into the browser and filtering in React.
+- **Rejected:** A single global stylesheet or inline styles.
 
-- **Why:** The README explicitly required this on the server, but even setting that aside it is the right approach. Loading everything client-side means the response gets larger as data grows and every filter operation requires a round trip worth of data the user never sees. The backend builds the query from request parameters and returns only the matching page. One specific thing I ran into , approvers should not see draft requisitions, but when a status filter was applied it was overriding the draft exclusion. Fixing that required merging the conditions carefully so the approver draft exclusion could not be bypassed by sending a status filter.
+- **Why:** With global CSS, class names are shared across the entire app. A class like `.table` or `.btn` defined in one page would affect every component using the same name. CSS Modules scope each file's classes to that component automatically so there are no naming conflicts even when using the same class names across different pages. It also made cleanup straightforward — each component owns its styles, so deleting a page means deleting one file, not hunting through a global stylesheet for classes that might or might not be used elsewhere.
+
+## Decision 13
+
+- **Chose:** Bulk approve as a toggle mode that filters the list to submitted-only before selection.
+
+- **Rejected:** Showing checkboxes on every row at all times.
+
+- **Why:** Checkboxes on every row looked messy and implied you could select received or rejected requisitions when you can't. The toggle enters a mode that hides everything except submitted ones so it's obvious what can be acted on. Cancel exits and restores the full list. It also prevents accidental bulk actions since you have to explicitly enter the mode first.
+
+## Decision 14
+
+- **Chose:** Archive as a global flag set only by the requisition owner (requester), hidden from approvers entirely.
+
+- **Rejected:** Per-user archive like AlertDismissal, or letting approvers archive independently.
+
+- **Why:** The spec says requisitions belong to one requester as owner. Archive reads like an ownership action, when the owner is done with it, it's done for everyone. Alert dismissal is per-approver because the spec explicitly says each approver can dismiss independently. Archive has no such distinction so I kept it simple with a global flag.
+
+- **Later reversed:** Initially showed the archived nav link to all users. Removed it for approvers after realising they never archive anything, the page would always be empty for them.

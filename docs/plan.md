@@ -104,40 +104,52 @@ I divided the work into sessions based on major parts of the application. Each s
 
 ---
 
-### Session 5 — Requisition detail page and documentation
+### Session 5 — Requisition detail and remaining pages
 
 **Planned / Estimated**
-- Continue building the frontend requisition workflow.
-- Implement the Requisition Detail page.
-- Start maintaining the required documentation alongside development.
+- Build the requisition detail page with full lifecycle actions.
+- Build create, edit, and archived pages.
+- Start maintaining documentation alongside development.
 
-**What actually happened so far**
-- Started implementing the Requisition Detail page.
-- Continued refining the connection between the requisitions list and individual requisition records.
+**What actually happened**
+- Built the requisition detail, create, edit, and archived pages.
+- Added role-based action buttons across the full lifecycle.
+- Committed initial documentation files : plan, architecture, schema, and decisions.
 
-**Currently in progress**
-- Completing the Requisition Detail page.
-- Refining individual requisition actions and frontend behaviour.
-- Continuing the remaining documentation files.
-
-**Notes / Adjustments**
-- This session is still in progress, so the final outcome will be updated once the current work is completed.
+**Notes**
+- git rebase was used to merge the frontend branch into main to keep a linear commit history. This rewrote the timestamps on the Sep 1 documentation commits. Merge was used for all subsequent branch integrations.
 
 ---
 
-### Remaining sessions
+### Session 6 — Bulk actions, alerts, and bug fixes
 
-**Planned**
-- Complete unfinished required functionality.
-- Integrate and test frontend workflows against backend APIs.
-- Test important backend endpoints again using Thunder Client.
-- Fix bugs and edge cases discovered during integration.
-- Refine the UI where necessary.
-- Complete and review all required documentation.
-- Perform a final requirement review before submission.
+**Planned / Estimated**
+- Add bulk approve and CSV export.
+- Build the alerts page end to end.
+- Fix bugs found during integration testing.
 
 **What actually happened**
-- To be updated as the remaining sessions are completed.
+- Added bulk approve with toggle mode and per-requisition result modal.
+- Built the alerts page with dismiss and nav badge.
+- Fixed integration bugs — overdue filter, alert re-surface logic, approval limit query, CSV encoding.
+
+**Notes**
+- Most bugs in this session came from edge cases that weren't visible during backend-only testing in Thunder Client. Having the full frontend connected made them show up quickly.
+
+---
+
+### Session 7 — Polish, fixes, and deployment
+
+**Planned**
+- Final requirement review.
+- UI polish.
+- Deploy and complete submission.
+
+**What actually happened**
+- Final review fixes — archive visibility for all statuses, dashboard scoped to requester's own data, requester department removed from detail page.
+- UI polish — favicon, chart date labels, department breakdown cards, equal height layout.
+- Added seed script and completed documentation.
+- Deployed backend to Render and frontend to Vercel, seeded demo data, completed SUBMISSION.md.
 
 ---
 
@@ -159,8 +171,14 @@ However, the actual work took longer than simply implementing each feature once.
 
 As a result, frontend development started slightly later than initially expected, but this reduced rework because the frontend could be built against a more stable backend.
 
-Since the project is still in progress, this comparison will be updated after the remaining project is completed.
+Overall the project took 7 sessions. The backend-first approach paid off - frontend integration was mostly smooth with bugs surfacing quickly once the UI was connected.
 
 ---
 
 ## What did I cut when I ran short?
+
+Nothing from the 10 required goals, all of them are complete.
+
+What I didn't get to was the stretch ideas. The ones I would have picked first were email notifications for status changes and overdue alerts, and a proper mobile layout for the approval flow. Both felt like they'd add real value for an approver who needs to act quickly. Email notifications in particular would have made the overdue alert system more useful since right now an approver only sees the alert when they log in.
+
+I also didn't write automated tests. The approval limit escalation, the alert re-surface logic, and the lifecycle state machine have real edge cases, I tested all of them manually in Thunder Client during development but they should have proper test coverage. That's the thing I'd fix first if I had more time.
