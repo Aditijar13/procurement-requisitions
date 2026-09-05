@@ -117,3 +117,21 @@ These are the decisions that actually shaped the codebase. Each one had a real a
 - **Why:** The spec says requisitions belong to one requester as owner. Archive reads like an ownership action, when the owner is done with it, it's done for everyone. Alert dismissal is per-approver because the spec explicitly says each approver can dismiss independently. Archive has no such distinction so I kept it simple with a global flag.
 
 - **Later reversed:** Initially showed the archived nav link to all users. Removed it for approvers after realising they never archive anything, the page would always be empty for them.
+
+## Decision 15
+
+- **Chose:** Scope dashboard metrics to the requester's own requisitions when the viewer is a requester.
+
+- **Rejected:** Showing global numbers to everyone.
+
+- **Why:** The dashboard initially showed global numbers regardless of role : a requester would see counts and totals across all requisitions, not just theirs. That's misleading since requesters only own their own requisitions and can't act on anyone else's. Approvers need the global view because they manage everything. Fixed by building a `baseMatch` filter in the dashboard controller that adds a requester ID condition for requester-role users before running any aggregation.
+
+- **Later reversed:** Initially built the dashboard with no role-based filtering at all : same numbers showed for everyone. Caught this during testing when logging in as a requester and seeing departments and requisitions that weren't theirs. Fixed in the dashboard controller by scoping all aggregation queries to the requester's own data when the logged-in user is a requester.
+
+## Decision 16
+
+- **Chose:** Poll the alerts endpoint every 60 seconds in the Sidebar for the badge count, with an immediate refetch triggered by a custom browser event after dismiss.
+
+- **Rejected:** Fetching the count once on mount and never updating it.
+
+- **Why:** The initial implementation only ran the alert count fetch once when the Sidebar mounted. This meant the badge showed a stale number after an approver dismissed an alert — it would only update on a full page refresh. The Sidebar and Alerts page are independent components with no shared parent that owns alert state, so the simplest way to trigger an immediate update after dismiss was a custom browser event. The Alerts page dispatches `alerts-updated` after a successful dismiss, and the Sidebar listens for it and refetches. Polling every 60 seconds runs alongside this so the badge also stays accurate when alerts become overdue without any user action.
